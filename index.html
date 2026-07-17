@@ -54,26 +54,14 @@
         }
 
         /* Цвета кнопок сложности */
-        #btn-easy {
-            background-color: #2ecc71; /* Зеленый */
-        }
-        #btn-easy:hover {
-            background-color: #27ae60;
-        }
+        #btn-easy { background-color: #2ecc71; }
+        #btn-easy:hover { background-color: #27ae60; }
 
-        #btn-good {
-            background-color: #f1c40f; /* Желтый */
-        }
-        #btn-good:hover {
-            background-color: #f39c12;
-        }
+        #btn-good { background-color: #f1c40f; }
+        #btn-good:hover { background-color: #f39c12; }
 
-        #btn-hard {
-            background-color: #e74c3c; /* Красный */
-        }
-        #btn-hard:hover {
-            background-color: #c0392b;
-        }
+        #btn-hard { background-color: #e74c3c; }
+        #btn-hard:hover { background-color: #c0392b; }
 
         /* Кнопка копирования */
         .btn-copy {
@@ -129,6 +117,7 @@
             gap: 40px;
             font-size: 16px;
             font-weight: bold;
+            margin-bottom: 15px;
         }
         .abbreviation-item span {
             background-color: #ffb6c1;
@@ -136,6 +125,15 @@
             border: 2px solid #000;
             border-radius: 5px;
             margin-right: 5px;
+        }
+        
+        /* Блок для счетчика */
+        .counter-box {
+            margin-top: 10px;
+            opacity: 0.7;
+        }
+        .counter-box:hover {
+            opacity: 1;
         }
     </style>
 </head>
@@ -176,6 +174,20 @@
             <div class="abbreviation-item"><span>E</span> Единство</div>
             <div class="abbreviation-item"><span>R</span> Результат</div>
         </div>
+        
+        <!-- ВСТРОЕННЫЙ КОД СЧЕТЧИКА СТАТИСТИКИ (LiveInternet) -->
+        <div class="counter-box">
+            <script>
+                document.write("<a href='https://liveinternet.ru' "+
+                "target=_blank><img src='//counter.yadro.ru/hit?t26.6;r"+
+                escape(document.referrer)+((typeof(screen)=="undefined")?"":
+                ";s"+screen.width+"*"+screen.height+"*"+(screen.colorDepth?
+                screen.colorDepth:screen.pixelDepth))+";u"+escape(document.URL)+
+                ";h"+escape(document.title.substring(0,150))+";"+Math.random()+
+                "' alt='' title='LiveInternet' "+
+                "border='0' width='88' height='15'><\/a>")
+            </script>
+        </div>
     </footer>
 
     <script>
@@ -211,35 +223,22 @@
             }, 1000);
         }
 
-        // Навешиваем простые и надежные клики
-        document.getElementById('btn-easy').onclick = function() {
-            startTimer(6, 4);
-        };
-        
-        document.getElementById('btn-good').onclick = function() {
-            startTimer(8, 6);
-        };
-        
-        document.getElementById('btn-hard').onclick = function() {
-            startTimer(10, 15);
-        };
+        document.getElementById('btn-easy').onclick = function() { startTimer(6, 4); };
+        document.getElementById('btn-good').onclick = function() { startTimer(8, 6); };
+        document.getElementById('btn-hard').onclick = function() { startTimer(10, 15); };
 
-        // Логика создания пароля
         function generatePassword(length) {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
             let result = '';
             for (let i = 0; i < length; i++) {
                 result += chars.charAt(Math.floor(Math.random() * chars.length));
             }
-
             title.textContent = 'Ваш пароль успешно сгенерирован!';
             passwordDisplay.textContent = result;
-            
             buttonsGroup.classList.remove('hidden');
             resultBlock.classList.remove('hidden');
         }
 
-        // Копирование в буфер
         copyBtn.onclick = function() {
             const password = passwordDisplay.textContent;
             navigator.clipboard.writeText(password).then(function() {
