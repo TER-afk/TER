@@ -63,17 +63,6 @@
 
         #btn-hard { background-color: #e74c3c; }
         #btn-hard:hover { background-color: #c0392b; }
-
-        /* Кнопка копирования */
-        .btn-copy {
-            background-color: #ff69b4;
-            display: inline-block;
-            margin-top: 15px;
-        }
-        .btn-copy:hover {
-            background-color: #ff1493;
-            color: #fff;
-        }
         
         .buttons-container {
             display: flex;
@@ -172,8 +161,6 @@
             <div id="result-block" class="hidden">
                 <div id="password-display"></div>
                 <div id="wish-block" class="secure-wish hidden">Надеюсь, наш пароль надёжно защитит ваш аккаунт! 🛡️</div>
-                <br>
-                <button id="copy-btn" class="btn btn-copy hidden">Выделить пароль</button>
             </div>
         </div>
     </div>
@@ -196,7 +183,6 @@
         const resultBlock = document.getElementById('result-block');
         const passwordDisplay = document.getElementById('password-display');
         const wishBlock = document.getElementById('wish-block');
-        const copyBtn = document.getElementById('copy-btn');
 
         let countdownInterval;
         let matrixInterval;
@@ -207,7 +193,6 @@
 
             buttonsGroup.classList.add('hidden');
             wishBlock.classList.add('hidden');
-            copyBtn.classList.add('hidden');
             passwordDisplay.classList.remove('matrix-hack');
             
             title.textContent = 'Идет дешифровка и подбор комбинаций...';
@@ -260,26 +245,7 @@
             
             buttonsGroup.classList.remove('hidden');
             wishBlock.classList.remove('hidden');
-            copyBtn.classList.remove('hidden');
         }
-
-        // Самый примитивный способ: кнопка просто мгновенно выделяет текст цветом для ручного Ctrl+C
-        copyBtn.onclick = function() {
-            const range = document.createRange();
-            range.selectNode(passwordDisplay);
-            window.getSelection().removeAllRanges();
-            window.getSelection().addRange(range);
-            
-            const originalText = copyBtn.textContent;
-            copyBtn.textContent = 'Теперь нажмите Ctrl + C!';
-            copyBtn.style.backgroundColor = '#007bff';
-            
-            setTimeout(function() {
-                copyBtn.textContent = originalText;
-                copyBtn.style.backgroundColor = '#ff69b4';
-                window.getSelection().removeAllRanges();
-            }, 2500);
-        };
     </script>
 
 </body>
