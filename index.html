@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>TER — Генератор и защита паролей</title>
+    <title>TER — Генератор паролей</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,7 +15,7 @@
             flex-direction: column;
         }
 
-        /* Логотип слева вверху */
+        /* Логотип */
         .logo-container {
             position: absolute;
             top: 20px;
@@ -40,18 +40,6 @@
             margin-top: 120px;
             padding: 20px;
         }
-
-        /* Текст статистики на экране */
-        .stats-text {
-            font-size: 16px;
-            font-weight: bold;
-            color: #555;
-            margin-bottom: 25px;
-        }
-        .stats-number {
-            color: #ff1493;
-            font-size: 20px;
-        }
         
         /* Розовые кнопки с черной рамкой */
         .btn {
@@ -63,6 +51,7 @@
             border: 3px solid #000000;
             border-radius: 25px;
             margin: 10px;
+            outline: none;
         }
 
         /* Цвета кнопок сложности */
@@ -105,6 +94,25 @@
             padding: 12px 25px;
             border-radius: 15px;
             border: 3px solid #000;
+            min-width: 200px;
+        }
+
+        /* Хакерский эффект Матрицы */
+        .matrix-hack {
+            font-family: 'Courier New', Courier, monospace !important;
+            color: #2ecc71 !important;
+            background: #000000 !important;
+            text-shadow: 0 0 8px #2ecc71;
+            border-color: #2ecc71 !important;
+        }
+        
+        /* Пожелание безопасности */
+        .secure-wish {
+            font-size: 16px;
+            font-style: italic;
+            color: #28a745;
+            font-weight: bold;
+            margin-top: 15px;
         }
         
         .hidden { display: none !important; }
@@ -129,7 +137,6 @@
             gap: 40px;
             font-size: 16px;
             font-weight: bold;
-            margin-bottom: 15px;
         }
         .abbreviation-item span {
             background-color: #ffb6c1;
@@ -150,11 +157,6 @@
     <!-- Главный контент -->
     <div class="main-content">
         <h1 id="main-title">Выберите тип пароля:</h1>
-        
-        <!-- Постоянная статистика на экране -->
-        <div class="stats-text">
-            Вы сгенерировали паролей: <span id="page-counter" class="stats-number">0</span>
-        </div>
 
         <!-- Блок генерации -->
         <div id="generation-block">
@@ -166,10 +168,12 @@
             
             <div id="timer-text" class="hidden">Генерация... Осталось секунд: <span id="seconds-left">0</span></div>
             
+            <!-- Поле результата -->
             <div id="result-block" class="hidden">
                 <div id="password-display"></div>
+                <div id="wish-block" class="secure-wish hidden">Надеюсь, наш пароль надёжно защитит ваш аккаунт! 🛡️</div>
                 <br>
-                <button id="copy-btn" class="btn btn-copy">Копировать в буфер</button>
+                <button id="copy-btn" class="btn btn-copy hidden">Выделить пароль</button>
             </div>
         </div>
     </div>
@@ -191,32 +195,47 @@
         const secondsLeftText = document.getElementById('seconds-left');
         const resultBlock = document.getElementById('result-block');
         const passwordDisplay = document.getElementById('password-display');
+        const wishBlock = document.getElementById('wish-block');
         const copyBtn = document.getElementById('copy-btn');
-        const pageCounter = document.getElementById('page-counter');
 
         let countdownInterval;
+        let matrixInterval;
 
-        // Загружаем число из памяти устройства
-        let totalGeneratedCount = parseInt(localStorage.getItem('ter_generated_count')) || 0;
-        pageCounter.textContent = totalGeneratedCount;
-
-        // Логика работы таймеров
         function startTimer(length, time) {
+            clearInterval(countdownInterval);
+            clearInterval(matrixInterval);
+
             buttonsGroup.classList.add('hidden');
-            resultBlock.classList.add('hidden');
-            title.textContent = 'Идет вычисление комбинаций...';
+            wishBlock.classList.add('hidden');
+            copyBtn.classList.add('hidden');
+            passwordDisplay.classList.remove('matrix-hack');
+            
+            title.textContent = 'Идет дешифровка и подбор комбинаций...';
             
             let secondsLeft = time;
             secondsLeftText.textContent = secondsLeft;
             timerText.classList.remove('hidden');
             
-            clearInterval(countdownInterval);
+            passwordDisplay.classList.add('matrix-hack');
+            resultBlock.classList.remove('hidden');
+
+            const matrixChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
+            
+            matrixInterval = setInterval(function() {
+                let fakePass = '';
+                for (let i = 0; i < length; i++) {
+                    fakePass += matrixChars.charAt(Math.floor(Math.random() * matrixChars.length));
+                }
+                passwordDisplay.textContent = fakePass;
+            }, 50);
+
             countdownInterval = setInterval(function() {
                 secondsLeft--;
                 secondsLeftText.textContent = secondsLeft;
                 
                 if (secondsLeft <= 0) {
                     clearInterval(countdownInterval);
+                    clearInterval(matrixInterval);
                     timerText.classList.add('hidden');
                     generatePassword(length);
                 }
@@ -228,6 +247,8 @@
         document.getElementById('btn-hard').onclick = function() { startTimer(10, 15); };
 
         function generatePassword(length) {
+            passwordDisplay.classList.remove('matrix-hack');
+
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
             let result = '';
             for (let i = 0; i < length; i++) {
@@ -236,29 +257,28 @@
 
             title.textContent = 'Ваш пароль успешно сгенерирован!';
             passwordDisplay.textContent = result;
-
-            // Обновляем счётчик
-            totalGeneratedCount++;
-            localStorage.setItem('ter_generated_count', totalGeneratedCount);
-            pageCounter.textContent = totalGeneratedCount;
             
             buttonsGroup.classList.remove('hidden');
-            resultBlock.classList.remove('hidden');
+            wishBlock.classList.remove('hidden');
+            copyBtn.classList.remove('hidden');
         }
 
-        // Копирование
+        // Самый примитивный способ: кнопка просто мгновенно выделяет текст цветом для ручного Ctrl+C
         copyBtn.onclick = function() {
-            const password = passwordDisplay.textContent;
-            navigator.clipboard.writeText(password).then(function() {
-                const originalText = copyBtn.textContent;
-                copyBtn.textContent = 'Скопировано!';
-                copyBtn.style.backgroundColor = '#28a745';
-                
-                setTimeout(function() {
-                    copyBtn.textContent = originalText;
-                    copyBtn.style.backgroundColor = '#ff69b4';
-                }, 1500);
-            });
+            const range = document.createRange();
+            range.selectNode(passwordDisplay);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = 'Теперь нажмите Ctrl + C!';
+            copyBtn.style.backgroundColor = '#007bff';
+            
+            setTimeout(function() {
+                copyBtn.textContent = originalText;
+                copyBtn.style.backgroundColor = '#ff69b4';
+                window.getSelection().removeAllRanges();
+            }, 2500);
         };
     </script>
 
