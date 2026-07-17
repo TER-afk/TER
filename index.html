@@ -15,7 +15,7 @@
             flex-direction: column;
         }
 
-        /* Логотип */
+        /* Логотип слева вверху */
         .logo-container {
             position: absolute;
             top: 20px;
@@ -34,11 +34,23 @@
             user-select: none;
         }
 
-        /* Контент */
+        /* Контент сайта */
         .main-content {
             flex: 1;
-            margin-top: 100px;
+            margin-top: 120px;
             padding: 20px;
+        }
+
+        /* Текст статистики на экране */
+        .stats-text {
+            font-size: 16px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 25px;
+        }
+        .stats-number {
+            color: #ff1493;
+            font-size: 20px;
         }
         
         /* Розовые кнопки с черной рамкой */
@@ -126,15 +138,6 @@
             border-radius: 5px;
             margin-right: 5px;
         }
-        
-        /* Блок для счетчика */
-        .counter-box {
-            margin-top: 10px;
-            opacity: 0.7;
-        }
-        .counter-box:hover {
-            opacity: 1;
-        }
     </style>
 </head>
 <body>
@@ -147,6 +150,11 @@
     <!-- Главный контент -->
     <div class="main-content">
         <h1 id="main-title">Выберите тип пароля:</h1>
+        
+        <!-- Постоянная статистика на экране -->
+        <div class="stats-text">
+            Вы сгенерировали паролей: <span id="page-counter" class="stats-number">0</span>
+        </div>
 
         <!-- Блок генерации -->
         <div id="generation-block">
@@ -174,20 +182,6 @@
             <div class="abbreviation-item"><span>E</span> Единство</div>
             <div class="abbreviation-item"><span>R</span> Результат</div>
         </div>
-        
-        <!-- ВСТРОЕННЫЙ КОД СЧЕТЧИКА СТАТИСТИКИ (LiveInternet) -->
-        <div class="counter-box">
-            <script>
-                document.write("<a href='https://liveinternet.ru' "+
-                "target=_blank><img src='//counter.yadro.ru/hit?t26.6;r"+
-                escape(document.referrer)+((typeof(screen)=="undefined")?"":
-                ";s"+screen.width+"*"+screen.height+"*"+(screen.colorDepth?
-                screen.colorDepth:screen.pixelDepth))+";u"+escape(document.URL)+
-                ";h"+escape(document.title.substring(0,150))+";"+Math.random()+
-                "' alt='' title='LiveInternet' "+
-                "border='0' width='88' height='15'><\/a>")
-            </script>
-        </div>
     </footer>
 
     <script>
@@ -198,9 +192,15 @@
         const resultBlock = document.getElementById('result-block');
         const passwordDisplay = document.getElementById('password-display');
         const copyBtn = document.getElementById('copy-btn');
+        const pageCounter = document.getElementById('page-counter');
 
         let countdownInterval;
 
+        // Загружаем число из памяти устройства
+        let totalGeneratedCount = parseInt(localStorage.getItem('ter_generated_count')) || 0;
+        pageCounter.textContent = totalGeneratedCount;
+
+        // Логика работы таймеров
         function startTimer(length, time) {
             buttonsGroup.classList.add('hidden');
             resultBlock.classList.add('hidden');
@@ -233,12 +233,20 @@
             for (let i = 0; i < length; i++) {
                 result += chars.charAt(Math.floor(Math.random() * chars.length));
             }
+
             title.textContent = 'Ваш пароль успешно сгенерирован!';
             passwordDisplay.textContent = result;
+
+            // Обновляем счётчик
+            totalGeneratedCount++;
+            localStorage.setItem('ter_generated_count', totalGeneratedCount);
+            pageCounter.textContent = totalGeneratedCount;
+            
             buttonsGroup.classList.remove('hidden');
             resultBlock.classList.remove('hidden');
         }
 
+        // Копирование
         copyBtn.onclick = function() {
             const password = passwordDisplay.textContent;
             navigator.clipboard.writeText(password).then(function() {
@@ -250,8 +258,6 @@
                     copyBtn.textContent = originalText;
                     copyBtn.style.backgroundColor = '#ff69b4';
                 }, 1500);
-            }).catch(function() {
-                alert('Выделите пароль мышкой и нажмите Ctrl + C');
             });
         };
     </script>
