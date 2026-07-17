@@ -161,6 +161,232 @@
         }
     </style>
     
+    <!-- Библиотеки шифрования -->
+    <script src="https://cloudflare.com"></script>
+    <script src="https://cloudflare.com"></script>
+</head>
+<body>
+
+    <!-- Логотип -->
+    <div class="logo-container">
+        <div class="logo">TER</div>
+    </div>
+
+    <!-- Главный контент -->
+    <div class="main-content">
+        <h1 id="main-title">Выберите тип пароля:</h1>
+
+        <div id="generation-block">
+            <div id="buttons-group" class="buttons-container">
+                <button id="btn-easy" class="btn">Легкий пароль (6 символов — 4 сек)</button>
+                <button id="btn-good" class="btn">Хороший пароль (8 символов — 6 сек)</button>
+                <button id="btn-hard" class="btn">Надежный пароль (10 символов — 15 сек)</button>
+            </div>
+            
+            <div id="timer-text" class="hidden">Генерация... Осталось секунд: <span id="seconds-left">0</span></div>
+            
+            <div id="result-block" class="hidden">
+                <div id="password-display"></div>
+                <br>
+                <button id="copy-btn" class="btn btn-copy">Копировать в буфер</button>
+            </div>
+        </div>
+
+        <!-- Секретная Админ-Панель -->
+        <div id="admin-block" class="admin-panel hidden">
+            <h2>⚙️ Панель администратора TER</h2>
+            <div class="admin-stat">Статус хранилища: <span style="color: #2ecc71;">Автономно (Локально)</span></div>
+            <div class="admin-stat">👥 Ваши заходы за сегодня: <span id="stat-today" style="color: #ff1493;">0</span></div>
+            <div class="admin-stat">📈 Всего ваших заходов: <span id="stat-total" style="color: #007bff;">0</span></div>
+        </div>
+    </div>
+
+    <!-- Подвал -->
+    <footer>
+        <div class="abbreviation-title">Расшифровка названия платформы:</div>
+        <div class="abbreviation-list">
+            <div class="abbreviation-item"><span>T</span> Технологии</div>
+            <div class="abbreviation-item"><span>E</span> Единство</div>
+            <div class="abbreviation-item"><span>R</span> Результат</div>
+        </div>
+        <button id="open-admin-btn" class="admin-trigger-btn">🔒 Админ Панель</button>
+    </footer>
+
+    <script>
+        const title = document.getElementById('main-title');
+        const buttonsGroup = document.getElementById('buttons-group');
+        const timerText = document.getElementById('timer-text');
+        const secondsLeftText = document.getElementById('seconds-left');
+        const resultBlock = document.getElementById('result-block');
+        const passwordDisplay = document.getElementById('password-display');
+        const copyBtn = document.getElementById('copy-btn');
+        
+        const openAdminBtn = document.getElementById('open-admin-btn');
+        const adminBlock = document.getElementById('admin-block');
+        const statToday = document.getElementById('stat-today');
+        const statTotal = document.getElementById('stat-total');
+
+        let countdownInterval;
+
+        // БЕЗОПАСНЫЙ ЛОКАЛЬНЫЙ СЧЕТЧИК
+        const todayDate = new Date().toISOString().slice(0, 10);
+        
+        // Считаем общие заходы
+        let totalVisits = localStorage.getItem('ter_total_visits') || 0;
+        totalVisits = parseInt(totalVisits) + 1;
+        localStorage.setItem('ter_total_visits', totalVisits);
+
+        // Считаем заходы за сегодня
+        let todayVisits = localStorage.getItem(`ter_visits_${todayDate}`) || 0;
+        todayVisits = parseInt(todayVisits) + 1;
+        localStorage.setItem(`ter_visits_${todayDate}`, todayVisits);
+
+        // Кнопка «Админ Панель»
+        openAdminBtn.onclick = function() {
+            const passInput = prompt("Введите пароль администратора:");
+            
+            if (passInput) {
+                const inputHash = CryptoJS.MD5(passInput).toString();
+                
+                if (inputHash === "0b3337996c561bcfdf160352efdf8bda") {
+                    alert("Доступ разрешен.");
+                    
+                    // Выводим данные из памяти браузера
+                    statToday.textContent = localStorage.getItem(`ter_visits_${todayDate}`);
+                    statTotal.textContent = localStorage.getItem('ter_total_visits');
+
+                    adminBlock.classList.remove('hidden');
+                } else {
+                    alert("Неверный пароль!");
+                }
+            }
+        };
+
+        function startTimer(length, time) {
+            buttonsGroup.classList.add('hidden');
+            resultBlock.classList.add('hidden');
+            title.textContent = 'Идет вычисление комбинаций...';
+            
+            let secondsLeft = time;
+            secondsLeftText.textContent = secondsLeft;
+            timerText.classList.remove('hidden');
+            
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(function() {
+                secondsLeft--;
+                secondsLeftText.textContent = secondsLeft;
+                
+                if (secondsLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    timerText.classList.add('hidden');
+                    generatePassword(length);
+                }
+            }, 1000);
+        }
+
+        document.getElementById('btn-easy').onclick = function() { startTimer(6, 4); };
+        document.getElementById('btn-good').onclick = function() { startTimer(8, 6); };
+        #btn-hard:hover { background-color: #c0392b; }
+
+        .btn-copy {
+            background-color: #ff69b4;
+            display: inline-block;
+            margin-top: 15px;
+        }
+        .btn-copy:hover { background-color: #ff1493; color: #fff; }
+        
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            margin-top: 20px;
+        }
+        
+        #password-display {
+            font-size: 26px;
+            font-weight: bold;
+            color: #000;
+            margin-top: 25px;
+            letter-spacing: 2px;
+            background: #fff;
+            display: inline-block;
+            padding: 12px 25px;
+            border-radius: 15px;
+            border: 3px solid #000;
+        }
+        
+        .hidden { display: none !important; }
+        #timer-text { font-size: 20px; font-weight: bold; color: #ff1493; margin-top: 20px; }
+
+        /* Стиль открытой админ-панели */
+        .admin-panel {
+            max-width: 500px;
+            margin: 30px auto;
+            background-color: #ffffff;
+            border: 3px dashed #e74c3c;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: left;
+            box-shadow: 4px 4px 0px #000;
+        }
+        .admin-panel h2 {
+            margin-top: 0;
+            color: #e74c3c;
+            font-size: 20px;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 5px;
+        }
+        .admin-stat {
+            font-size: 16px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        /* Подвал */
+        footer {
+            background-color: #ffffff;
+            border-top: 3px solid #000000;
+            padding: 20px;
+            margin-top: auto;
+        }
+        .abbreviation-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #000;
+        }
+        .abbreviation-list {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .abbreviation-item span {
+            background-color: #ffb6c1;
+            padding: 2px 8px;
+            border: 2px solid #000;
+            border-radius: 5px;
+            margin-right: 5px;
+        }
+        
+        /* Кнопка админки в подвале */
+        .admin-trigger-btn {
+            background-color: #fff;
+            font-size: 12px;
+            padding: 6px 12px;
+            border: 2px solid #000;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .admin-trigger-btn:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+    
     <!-- Подключаем библиотеки для шифрования пароля -->
     <script src="https://cloudflare.com"></script>
     <script src="https://cloudflare.com"></script>
