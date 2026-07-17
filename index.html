@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>TER — Генератор и защита паролей</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Логотип */
+        .logo-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: #000000;
+            background-color: #ffb6c1;
+            border: 3px solid #000000;
+            border-radius: 12px;
+            padding: 8px 16px;
+            letter-spacing: 1px;
+            box-shadow: 2px 2px 0px #000;
+        }
+
+        /* Контент */
+        .main-content {
+            flex: 1;
+            margin-top: 100px;
+            padding: 20px;
+        }
+        
+        /* Базовый стиль кнопок */
+        .btn {
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #000000;
+            border: 3px solid #000000;
+            border-radius: 25px;
+            margin: 10px;
+        }
+
+        /* Разные цвета для кнопок сложности */
+        #btn-easy {
+            background-color: #2ecc71; /* Зеленый */
+        }
+        #btn-easy:hover {
+            background-color: #27ae60;
+        }
+
+        #btn-good {
+            background-color: #f1c40f; /* Желтый */
+        }
+        #btn-good:hover {
+            background-color: #f39c12;
+        }
+
+        #btn-hard {
+            background-color: #e74c3c; /* Красный */
+        }
+        #btn-hard:hover {
+            background-color: #c0392b;
+        }
+
+        /* Кнопка копирования */
+        .btn-copy {
+            background-color: #ff69b4;
+            display: inline-block;
+            margin-top: 15px;
+        }
+        .btn-copy:hover {
+            background-color: #ff1493;
+            color: #fff;
+        }
+        
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            margin-top: 20px;
+        }
+        
+        #password-display {
+            font-size: 26px;
+            font-weight: bold;
+            color: #000;
+            margin-top: 25px;
+            letter-spacing: 2px;
+            background: #fff;
+            display: inline-block;
+            padding: 12px 25px;
+            border-radius: 15px;
+            border: 3px solid #000;
+        }
+        
+        .hidden { display: none !important; }
+        #timer-text { font-size: 20px; font-weight: bold; color: #ff1493; margin-top: 20px; }
+
+        /* Подвал */
+        footer {
+            background-color: #ffffff;
+            border-top: 3px solid #000000;
+            padding: 20px;
+            margin-top: auto; /* Прижимает подвал к самому низу экрана */
+        }
+        .abbreviation-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #000;
+        }
+        .abbreviation-list {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .abbreviation-item span {
+            background-color: #ffb6c1;
+            padding: 2px 8px;
+            border: 2px solid #000;
+            border-radius: 5px;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Логотип -->
+    <div class="logo-container">
+        <div class="logo">TER</div>
+    </div>
+
+    <!-- Главный контент -->
+    <div class="main-content">
+        <h1 id="main-title">Выберите тип пароля:</h1>
+
+        <!-- Блок генерации доступен сразу -->
+        <div id="generation-block">
+            <div id="buttons-group" class="buttons-container">
+                <button id="btn-easy" class="btn">Легкий пароль (6 символов — 4 сек)</button>
+                <button id="btn-good" class="btn">Хороший пароль (8 символов — 6 сек)</button>
+                <button id="btn-hard" class="btn">Надежный пароль (10 символов — 15 сек)</button>
+            </div>
+            
+            <div id="timer-text" class="hidden">Генерация... Осталось секунд: <span id="seconds-left">0</span></div>
+            
+            <div id="result-block" class="hidden">
+                <div id="password-display"></div>
+                <br>
+                <button id="copy-btn" class="btn btn-copy">Копировать в буфер</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подвал -->
+    <footer>
+        <div class="abbreviation-title">Расшифровка названия платформы:</div>
+        <div class="abbreviation-list">
+            <div class="abbreviation-item"><span>T</span> Технологии</div>
+            <div class="abbreviation-item"><span>E</span> Единство</div>
+            <div class="abbreviation-item"><span>R</span> Результат</div>
+        </div>
+    </footer>
+
+    <script>
+        const title = document.getElementById('main-title');
+        const buttonsGroup = document.getElementById('buttons-group');
+        const timerText = document.getElementById('timer-text');
+        const secondsLeftText = document.getElementById('seconds-left');
+        const resultBlock = document.getElementById('result-block');
+        const passwordDisplay = document.getElementById('password-display');
+        const copyBtn = document.getElementById('copy-btn');
+
+        let countdownInterval;
+
+        function startTimer(length, time) {
+            buttonsGroup.classList.add('hidden');
+            resultBlock.classList.add('hidden');
+            title.textContent = 'Идет вычисление комбинаций...';
+            
+            let secondsLeft = time;
+            secondsLeftText.textContent = secondsLeft;
+            timerText.classList.remove('hidden');
+            
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(function() {
+                secondsLeft--;
+                secondsLeftText.textContent = secondsLeft;
+                
+                if (secondsLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    timerText.classList.add('hidden');
+                    generatePassword(length);
+                }
+            }, 1000);
+        }
+
+        // Привязка действий к цветным кнопкам
+        document.getElementById('btn-easy').onclick = function() {
+            startTimer(6, 4);
+        };
+        
+        document.getElementById('btn-good').onclick = function() {
+            startTimer(8, 6);
+        };
+        
+        document.getElementById('btn-hard').onclick = function() {
+            startTimer(10, 15);
+        };
+
+        // Логика создания случайного пароля
+        function generatePassword(length) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+
+            title.textContent = 'Ваш пароль успешно сгенерирован!';
+            passwordDisplay.textContent = result;
+            
+            buttonsGroup.classList.remove('hidden');
+            resultBlock.classList.remove('hidden');
+        }
+
+        // Логика кнопки копирования
+        copyBtn.onclick = function() {
+            const password = passwordDisplay.textContent;
+            navigator.clipboard.writeText(password).then(function() {
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = 'Скопировано!';
+                copyBtn.style.backgroundColor = '#28a745'; // Зеленый фон при успехе
+                
+                setTimeout(function() {
+                    copyBtn.textContent = originalText;
+                    copyBtn.style.backgroundColor = '#ff69b4';
+                }, 1500);
+            }).catch(function() {
+                alert('Выделите пароль мышкой и нажмите Ctrl + C');
+            });
+        };
+    </script>
+
+</body>
+</html>
