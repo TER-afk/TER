@@ -52,6 +52,7 @@
             border-radius: 25px;
             margin: 10px;
             outline: none;
+            transition: 0.2s;
         }
 
         /* Цвета кнопок сложности */
@@ -63,6 +64,13 @@
 
         #btn-hard { background-color: #e74c3c; }
         #btn-hard:hover { background-color: #c0392b; }
+
+        /* Кнопки управления результатом */
+        #btn-copy { background-color: #3498db; color: white; }
+        #btn-copy:hover { background-color: #2980b9; }
+
+        #btn-restart { background-color: #95a5a6; color: white; }
+        #btn-restart:hover { background-color: #7f8c8d; }
         
         .buttons-container {
             display: flex;
@@ -84,6 +92,7 @@
             border-radius: 15px;
             border: 3px solid #000;
             min-width: 200px;
+            word-break: break-all;
         }
 
         /* Хакерский эффект Матрицы */
@@ -161,6 +170,10 @@
             <div id="result-block" class="hidden">
                 <div id="password-display"></div>
                 <div id="wish-block" class="secure-wish hidden">Надеюсь, наш пароль надёжно защитит ваш аккаунт! 🛡️</div>
+                <div style="margin-top: 15px;">
+                    <button id="btn-copy" class="btn">📋 Скопировать</button>
+                    <button id="btn-restart" class="btn">🔄 Создать другой</button>
+                </div>
             </div>
         </div>
     </div>
@@ -183,6 +196,8 @@
         const resultBlock = document.getElementById('result-block');
         const passwordDisplay = document.getElementById('password-display');
         const wishBlock = document.getElementById('wish-block');
+        const btnCopy = document.getElementById('btn-copy');
+        const btnRestart = document.getElementById('btn-restart');
 
         let countdownInterval;
         let matrixInterval;
@@ -233,8 +248,13 @@
 
         function generatePassword(length) {
             passwordDisplay.classList.remove('matrix-hack');
+            btnCopy.textContent = "📋 Скопировать";
 
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            if (length >= 10) {
+                chars += '!@#$%^&*()_+~=';
+            }
+
             let result = '';
             for (let i = 0; i < length; i++) {
                 result += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -242,11 +262,20 @@
 
             title.textContent = 'Ваш пароль успешно сгенерирован!';
             passwordDisplay.textContent = result;
-            
-            buttonsGroup.classList.remove('hidden');
             wishBlock.classList.remove('hidden');
         }
-    </script>
 
+        btnCopy.onclick = function() {
+            navigator.clipboard.writeText(passwordDisplay.textContent).then(function() {
+                btnCopy.textContent = "✅ Скопировано!";
+            });
+        };
+
+        btnRestart.onclick = function() {
+            resultBlock.classList.add('hidden');
+            buttonsGroup.classList.remove('hidden');
+            title.textContent = 'Выберите тип пароля:';
+        };
+    </script>
 </body>
 </html>
