@@ -31,6 +31,7 @@
             padding: 8px 16px;
             letter-spacing: 1px;
             box-shadow: 2px 2px 0px #000;
+            user-select: none;
         }
 
         /* Контент */
@@ -52,38 +53,21 @@
             margin: 10px;
         }
 
-        /* Разные цвета для кнопок сложности */
-        #btn-easy {
-            background-color: #2ecc71; /* Зеленый */
-        }
-        #btn-easy:hover {
-            background-color: #27ae60;
-        }
+        #btn-easy { background-color: #2ecc71; }
+        #btn-easy:hover { background-color: #27ae60; }
 
-        #btn-good {
-            background-color: #f1c40f; /* Желтый */
-        }
-        #btn-good:hover {
-            background-color: #f39c12;
-        }
+        #btn-good { background-color: #f1c40f; }
+        #btn-good:hover { background-color: #f39c12; }
 
-        #btn-hard {
-            background-color: #e74c3c; /* Красный */
-        }
-        #btn-hard:hover {
-            background-color: #c0392b;
-        }
+        #btn-hard { background-color: #e74c3c; }
+        #btn-hard:hover { background-color: #c0392b; }
 
-        /* Кнопка копирования */
         .btn-copy {
             background-color: #ff69b4;
             display: inline-block;
             margin-top: 15px;
         }
-        .btn-copy:hover {
-            background-color: #ff1493;
-            color: #fff;
-        }
+        .btn-copy:hover { background-color: #ff1493; color: #fff; }
         
         .buttons-container {
             display: flex;
@@ -109,12 +93,36 @@
         .hidden { display: none !important; }
         #timer-text { font-size: 20px; font-weight: bold; color: #ff1493; margin-top: 20px; }
 
+        /* Стиль открытой админ-панели */
+        .admin-panel {
+            max-width: 500px;
+            margin: 30px auto;
+            background-color: #ffffff;
+            border: 3px dashed #e74c3c;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: left;
+            box-shadow: 4px 4px 0px #000;
+        }
+        .admin-panel h2 {
+            margin-top: 0;
+            color: #e74c3c;
+            font-size: 20px;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 5px;
+        }
+        .admin-stat {
+            font-size: 16px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
         /* Подвал */
         footer {
             background-color: #ffffff;
             border-top: 3px solid #000000;
             padding: 20px;
-            margin-top: auto; /* Прижимает подвал к самому низу экрана */
+            margin-top: auto;
         }
         .abbreviation-title {
             font-size: 18px;
@@ -128,6 +136,7 @@
             gap: 40px;
             font-size: 16px;
             font-weight: bold;
+            margin-bottom: 15px;
         }
         .abbreviation-item span {
             background-color: #ffb6c1;
@@ -136,7 +145,25 @@
             border-radius: 5px;
             margin-right: 5px;
         }
+        
+        /* Кнопка админки в подвале */
+        .admin-trigger-btn {
+            background-color: #fff;
+            font-size: 12px;
+            padding: 6px 12px;
+            border: 2px solid #000;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .admin-trigger-btn:hover {
+            background-color: #f0f0f0;
+        }
     </style>
+    
+    <!-- Подключаем библиотеки для шифрования пароля -->
+    <script src="https://cloudflare.com"></script>
+    <script src="https://cloudflare.com"></script>
 </head>
 <body>
 
@@ -149,7 +176,6 @@
     <div class="main-content">
         <h1 id="main-title">Выберите тип пароля:</h1>
 
-        <!-- Блок генерации доступен сразу -->
         <div id="generation-block">
             <div id="buttons-group" class="buttons-container">
                 <button id="btn-easy" class="btn">Легкий пароль (6 символов — 4 сек)</button>
@@ -165,6 +191,14 @@
                 <button id="copy-btn" class="btn btn-copy">Копировать в буфер</button>
             </div>
         </div>
+
+        <!-- Секретная Админ-Панель (Изначально скрыта) -->
+        <div id="admin-block" class="admin-panel hidden">
+            <h2>⚙️ Панель администратора TER</h2>
+            <div class="admin-stat">Статус базы данных: <span style="color: #2ecc71;">Подключено</span></div>
+            <div class="admin-stat">👥 Уникальных людей за сегодня: <span id="stat-today" style="color: #ff1493;">Загрузка...</span></div>
+            <div class="admin-stat">📈 Всего просмотров сайта: <span id="stat-total" style="color: #007bff;">Загрузка...</span></div>
+        </div>
     </div>
 
     <!-- Подвал -->
@@ -175,6 +209,8 @@
             <div class="abbreviation-item"><span>E</span> Единство</div>
             <div class="abbreviation-item"><span>R</span> Результат</div>
         </div>
+        <!-- Заметная кнопка для администратора -->
+        <button id="open-admin-btn" class="admin-trigger-btn">🔒 Админ Панель</button>
     </footer>
 
     <script>
@@ -185,76 +221,59 @@
         const resultBlock = document.getElementById('result-block');
         const passwordDisplay = document.getElementById('password-display');
         const copyBtn = document.getElementById('copy-btn');
+        
+        // Админ элементы
+        const openAdminBtn = document.getElementById('open-admin-btn');
+        const adminBlock = document.getElementById('admin-block');
+        const statToday = document.getElementById('stat-today');
+        const statTotal = document.getElementById('stat-total');
 
         let countdownInterval;
+
+        // Уникальный ключ для вашего сайта в бесплатной базе статистики CountAPI
+        const siteKey = "ter_afk_password_generator_project_2026";
+        const todayDate = new Date().toISOString().slice(0, 10); // Формат ГГГГ-ММ-ДД
+
+        // АВТОМАТИЧЕСКИЙ СЧЕТЧИК ПРИ ЗАХОДЕ НА САЙТ
+        // 1. Фиксируем общий просмотр
+        fetch(`https://countapi.xyz{siteKey}/total`).catch(() => {});
+        
+        // 2. Фиксируем посещение за сегодня (используем дату как под-ключ)
+        fetch(`https://countapi.xyz{siteKey}/day_${todayDate}`).catch(() => {});
+
+        // Логика кнопки «Админ Панель» в подвале
+        openAdminBtn.onclick = function() {
+            const passInput = prompt("Введите пароль администратора для просмотра статистики:");
+            
+            if (passInput) {
+                // Хэш от пароля Pavel571
+                const inputHash = CryptoJS.MD5(passInput).toString();
+                
+                if (inputHash === "0b3337996c561bcfdf160352efdf8bda") {
+                    alert("Доступ разрешен. Данные обновлены.");
+                    
+                    // Запрашиваем реальные данные из базы данных интернета
+                    // Получаем просмотры за сегодня
+                    fetch(`https://countapi.xyz{siteKey}/day_${todayDate}`)
+                        .then(res => res.json())
+                        .then(data => { statToday.textContent = data.value || 1; })
+                        .catch(() => { statToday.textContent = "1 (Локально)"; });
+
+                    // Получаем общие просмотры
+                    fetch(`https://countapi.xyz{siteKey}/total`)
+                        .then(res => res.json())
+                        .then(data => { statTotal.textContent = data.value || 1; })
+                        .catch(() => { statTotal.textContent = "1 (Локально)"; });
+
+                    adminBlock.classList.remove('hidden'); // Показываем админку на экране
+                } else {
+                    alert("Неверный пароль! Доступ заблокирован.");
+                }
+            }
+        };
 
         function startTimer(length, time) {
             buttonsGroup.classList.add('hidden');
             resultBlock.classList.add('hidden');
             title.textContent = 'Идет вычисление комбинаций...';
             
-            let secondsLeft = time;
-            secondsLeftText.textContent = secondsLeft;
-            timerText.classList.remove('hidden');
-            
-            clearInterval(countdownInterval);
-            countdownInterval = setInterval(function() {
-                secondsLeft--;
-                secondsLeftText.textContent = secondsLeft;
-                
-                if (secondsLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    timerText.classList.add('hidden');
-                    generatePassword(length);
-                }
-            }, 1000);
-        }
-
-        // Привязка действий к цветным кнопкам
-        document.getElementById('btn-easy').onclick = function() {
-            startTimer(6, 4);
-        };
-        
-        document.getElementById('btn-good').onclick = function() {
-            startTimer(8, 6);
-        };
-        
-        document.getElementById('btn-hard').onclick = function() {
-            startTimer(10, 15);
-        };
-
-        // Логика создания случайного пароля
-        function generatePassword(length) {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            let result = '';
-            for (let i = 0; i < length; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-
-            title.textContent = 'Ваш пароль успешно сгенерирован!';
-            passwordDisplay.textContent = result;
-            
-            buttonsGroup.classList.remove('hidden');
-            resultBlock.classList.remove('hidden');
-        }
-
-        // Логика кнопки копирования
-        copyBtn.onclick = function() {
-            const password = passwordDisplay.textContent;
-            navigator.clipboard.writeText(password).then(function() {
-                const originalText = copyBtn.textContent;
-                copyBtn.textContent = 'Скопировано!';
-                copyBtn.style.backgroundColor = '#28a745'; // Зеленый фон при успехе
-                
-                setTimeout(function() {
-                    copyBtn.textContent = originalText;
-                    copyBtn.style.backgroundColor = '#ff69b4';
-                }, 1500);
-            }).catch(function() {
-                alert('Выделите пароль мышкой и нажмите Ctrl + C');
-            });
-        };
-    </script>
-
-</body>
-</html>
